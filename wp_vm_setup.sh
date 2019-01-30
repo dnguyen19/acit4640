@@ -56,4 +56,4 @@ vboxmanage modifyvm ${vm_name}\
             --boot4 none\
             --memory 1280
 			
-#vboxmanage startvm ${vm_name} --type gui
+vboxmanage startvm ${vm_name} --type gui
