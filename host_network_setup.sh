@@ -2,6 +2,15 @@ vboxmanage () { VBoxManage.exe "$@";}
 
 declare vm_name="test"
 
+declare vm_conf_file="$( echo "${vm_conf_line}" | grep -oE '[[:alpha:]]:(\\[^\]+){1,}\\.+\.vbox' )"
+declare vm_directory_win="$(echo ${vm_conf_file} | sed 's/Config file:\s\+// ; s/\\[^\]\+\.vbox$//')"
+declare vm_directory_linux="$(echo ${vm_conf_file} | sed 's/Config file:\s\+// ; s/\([[:upper:]]\):/\/mnt\/\L\1/ ; s/\\/\//g')"
+
+vm_directory_linux="$(dirname "$vm_directory_linux")"
+
+echo "${vm_directory_linux}"
+echo "${vm_directory_win}"
+
 declare vm_info="$(vboxmanage showvminfo "${vm_name}")"
 declare vm_conf_line="$(echo "${vm_info}" | grep "Config file")"
 declare vm_conf_file="$( echo "${vm_conf_line}" | grep -oE '(/[^/]+)+')"
