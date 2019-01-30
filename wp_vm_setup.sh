@@ -1,8 +1,35 @@
-vboxmanage () { VBoxManage.exe "$@";}
+vboxmanage createvm --name ${vm_name} --register
 
-
-vboxmanage createvm --name WP_VM --register
-
+vboxmanage createhd --filename ${vm_folder}/${vm_name}.vdi \
+					--size 1000 -variant Standard
+					
+vboxmanage storagectl ${vm_name} --name ide_storage --add ide --bootable on
+vboxmanage storagectl ${vm_name} --name sata_storage --add sata --bootable on
+					
+					
+vboxmanage storageattach ${vm_name} \
+					--storagectl ${ctrlr_name} \
+					--port ${port_num} \
+					--device ${devic_num} \
+					--type dvddrive \
+					--medium ${ios_file_path}
+					
+vboxmanage storageattach ${vm_name} \
+					--storagectl ${ctrlr_name} \
+					--port ${port_num} \
+					--device ${devic_num} \
+					--type dvddrive \
+					--medium "mnt/c/Program Files/Oracle/VirtualBox/VBoxGuestAdditions.iso"
+					
+vboxmanage storageattach ${vm_name} \
+					--storagectl ${ctrlr_name} \
+					--port ${port_num} \
+					--device ${device_num} \
+					--type hdd \
+					--medium ${vm_folder}/${vm_name}.vdi \
+					--nonrotational on
+					
+					
 vboxmanage modifyvm WP_VM\
             --groups "${group_name}"\
             --ostype "RedHat_64"\
