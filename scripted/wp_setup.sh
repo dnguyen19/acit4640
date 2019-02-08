@@ -52,5 +52,19 @@ sed -i '58s/.*/location ~ \.php$ {' /etc/nginx/nginx.conf
 echo "CREATE DATABASE wordpress;" > wp_mariadb_config.sql
 echo "CREATE USER wordpress_user@localhost IDENTIFIED BY 'P@ssw0rd';" >> wp_mariadb_config.sql
 echo "GRANT ALL PRIVILEGES ON wordpress.* TO wordpress_user@localhost;">> wp_mariadb_config.sql
-echo "FLUSH PRIVILEDGES;" >> wp_mariadb_config.sql
+echo "FLUSH PRIVILEGES;" >> wp_mariadb_config.sql
 
+wget https://wordpress.org/latest.tar.gz
+tar xzvf latest.tar.gz
+cp wordpress/wp-config-sample.php wordpress/wp-config.php
+
+sed -i '23s/.*/define('DB_NAME', 'wordpress');/' /wordpress/wp-config.php
+sed -i '26s/.*/define('DB_USER', 'wordpress_user');' /wordpress/wp-config.php
+sed -i '29s/.*define('DB_PASSWORD', 'P@ssw0rd');' /wordpress/wp-config.php
+
+sudo rsync -avP wordpress/ /usr/share/nginx/html/
+sudo mkdir /usr/share/nginx/html/wp-content/uploads
+useradd admin -p P@ssw0rd
+sudo chown -R admin:nginx /usr/share/nginx/html*
+
+curl http://localhost:80 -I
