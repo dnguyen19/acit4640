@@ -4,7 +4,7 @@ declare vm_name="acit4640"
 declare vm_folder="C:\Users\denis\Documents\CIT\CIT4\provision"
 
 declare network_name="sys_net_prov"
-declare network_address="*"
+declare network_address=""
 declare cidr_bits="24"
 declare local_ip="192.168.254.10"
  
