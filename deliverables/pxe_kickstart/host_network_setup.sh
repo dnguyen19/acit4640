@@ -7,6 +7,7 @@ declare network_name="sys_net_prov"
 declare network_address=""
 declare cidr_bits="24"
 declare local_ip="192.168.254.10"
+declare pxe_ip="192.168.254.5"
  
 declare port_num=0
 declare devic_num=0
@@ -19,3 +20,5 @@ vboxmanage natnetwork modify --netname ${network_name} --port-forward-4 "rule_1:
 vboxmanage natnetwork modify --netname ${network_name} --port-forward-4 "rule_2:TCP:[${network_address}]:50080:[${local_ip}]:80"
 	
 vboxmanage natnetwork modify --netname ${network_name} --port-forward-4 "rule_3:TCP:[${network_address}]:50443:[${local_ip}]:443"
+
+vboxmanage natnetwork modify --netname ${network_name} --port-forward-4 "Rule 4:TCP:[${network_address}]:50222:[${pxe_ip}]:22"

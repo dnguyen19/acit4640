@@ -60,3 +60,18 @@ vboxmanage modifyvm ${vm_name}\
 
 
 vboxmanage startvm ${vm_name} --type gui
+
+scp ./wp_ks.cfg pxe:/usr/share/nginx/html/
+ssh pxe 'sudo chown nginx:wheel /usr/share/nginx/html/wp_ks.cfg'
+ssh pxe 'chmod ugo+r /usr/share/nginx/html/wp_ks.cfg'
+ssh pxe 'chmod ugo+rx /usr/share/nginx/html/setup'
+ssh pxe 'chmod -R ugo+r /usr/share/nginx/html/setup/*'
+
+until [[ $(ssh -q wp exit && echo "online") == "online" ]] ; do
+  sleep 10s
+  echo "waiting for wp vm to come online"
+done
+
+##ssh pxe
+##bash wp_vm_setup.sh
+##localhost 50080
