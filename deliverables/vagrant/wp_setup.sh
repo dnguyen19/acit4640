@@ -1,5 +1,5 @@
-sed -i '4s/.*/BOOTPROTO=static' /etc/sysconfig/network-scripts/ifcfg-enp0s3
-echo "IPADDR=192.168.254.10" > /etc/sysconfig/network-scripts/ifcfg-enp0s3
+echo "BOOTPROTO=static" > /etc/sysconfig/network-scripts/ifcfg-enp0s3
+echo "IPADDR=192.168.254.10" >> /etc/sysconfig/network-scripts/ifcfg-enp0s3
 echo "GATEWAY=192.168.254.1" >> /etc/sysconfig/network-scripts/ifcfg-enp0s3
 echo "NETMASK=255.255.255.0" >> /etc/sysconfig/network-scripts/ifcfg-enp0s3
 echo "PREFIX=24" >> /etc/sysconfig/network-scripts/ifcfg-enp0s3
