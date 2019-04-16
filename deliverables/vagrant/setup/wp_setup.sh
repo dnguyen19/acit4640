@@ -37,3 +37,4 @@ mkdir /usr/share/nginx/html/wp-content/uploads
 chown -R admin:nginx /usr/share/nginx/html/*
 systemctl restart nginx
 
+  #config.vm.provision "file", source: "./setup", destination: "/home/admin/"

@@ -1,129 +1,171 @@
-- hosts: all
+- hosts: wp
+  become: yes
+  vars:
+    mysql_root_password: P@ssw0rd
+    mysql_root_password_update: yes
+
   tasks:
-    - name: Repository 
-     yum: state=present name={{ item }}
-     with_items:
-     - php
-     - php-fpm
-     - php-mysql
-     - nginx
-     - mariadb-server
-     - mariadb
-     - mysql
-     - rsync
-     become: true
+    #EPEL
+    - name: Add repository
+      yum_repository:
+        name: epel
+        description: EPEL YUM repo
+        baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
 
-  #EPEL
-  - name: Add repository
-    yum_repository:
-      name: epel
-      description: EPEL YUM repo
-      baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+    #firewall
+    - firewalld:
+        service: https
+        permanent: yes
+        state: enabled
+        immediate: yes
 
-  #firewall
-  - firewalld:
-      service: https
-      permanent: yes
-      state: enabled
-      immediate: yes
-    become: true
+    - firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+        immediate: yes
 
-  - firewalld:
-      zone: dmz
-      service: http
-      permanent: yes
-      state: enabled
-      immediate: yes
-    become: true
+    - name: Enable the firewall port 80
+      firewalld:
+       port: 80/tcp
+       state: enabled
+       immediate: yes
+
+    - name: Enable the firewall port 443
+      firewalld:
+        port: 443/tcp
+        state: enabled
+        immediate: yes
+
+    #nginx
+    - name: install nginx
+      package:
+        name: nginx
+        state: present
+
+    - name: copy nginx to configuration file
+      copy:
+        src: ./setup/nginx.conf
+        dest: /etc/nginx.conf
+        owner: admin
+        group: admin
+        mode: 0644
+
+    - name: Start service nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
     
-  #nginx
-  - name: install nginx
-    package:
-      name: nginx
-      state: present
+    #PHP
+    - name: install php
+      package:
+        name: php
+        state: present
 
-  - name: copy nginx to configuration file
-    copy:
-      src: /provisioning/setup/nginx.conf
-      dest: /etc/nginx.conf
-      owner: admin
-      group: admin
-      mode: 0644
+    - name: install php-mysql
+      package: 
+        name: php-mysql
+        state: present
 
-  - name: Start service nginx
-    service:
-      name: nginx
-      state: started
-  
-  #PHP
-  - name: install php
-    package:
-      name: php
-      state: present
+    - name: install php-fpm
+      package:
+        name: php-fpm
+        state: present
 
-  - name: install php-fpm
-    package:
-      name: php-fpm
-      state: present
+    - name: copy php to www.conf
+      copy:
+        src: ./setup/php.ini
+        dest: /etc/php-fpm.d/www.conf
+        owner: admin
+        group: admin
+        mode: 0644
 
-  - name: copy php to configuration file
-    copy:
-      src: /provisioning/setup/php.ini
-      dest: /etc/php.ini
-      owner: admin
-      group: admin
-      mode: 0644
+    - name: copy php to php.ini
+      copy:
+        src: ./setup/php.ini
+        dest: /etc/php-fpm.d/www.conf
+        owner: admin
+        group: admin
+        mode: 0644
 
-  - name: Start service php
-    service:
-      name: php
-      state: started
+    - name: Start service php-fpm
+      service:
+        name: php-fpm
+        state: started
 
-  - name: Start service php-fpm
-    service:
-      name: php-fpm
-      state: started
+    #MariaDB
+    - name: install MariaDB
+      package:
+        name: mariadb
+        state: present
 
-  #MariaDB
-  - name: install MariaDB
-    package:
-      name: MariaDB
-      state: present
 
-  - name: Configuring MariaDB Service
-     service:
-       name: mariadb.service
-       state: restarted
-     become: true
+    - name: installing mariadb-server
+      package:
+        name: mariadb-server
+        state: present
 
-   - name: access to mysql
-     shell: mysql -u root < /home/admin/mariadb_security_config.sql
-     become: true
+    - name: Start mariadb
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
 
-   - name: Configuring more MariaDB 
-     service:
-       name: mariadb
-       state: restarted
-     become: true
+    - name: copying mariadb_security_config.sql
+      copy:
+        src: ./setup/mariadb_security_config.sql
+        dest: /etc/mariadb_security_config.sql
+        owner: admin
+        group: admin
+        mode: 0644
 
-   - name: configure mariadb
-     shell: mysql -u root -pP@ssw0rd < /home/admin/wp_mariadb_config.sql
-     become: true
+    - name: copying wp_mariadb_config.sql
+      copy:
+        src: ./setup/wp_mariadb_config.sql
+        dest: /etc/wp_mariadb_config.sql
+        owner: admin
+        group: admin
+        mode: 0644
 
-  #Wordpress
-  - name: Get Wordpress
-    get_url:
-      url: http://example.com/path/file.conf
-      dest: /etc/foo.conf
-      mode: 0440
+    - name: run initial script for mariadb
+      shell: mysql -u root < /etc/mariadb_security_config.sql
 
-  - name: Unpack Wordpress
-    unarchive:
-      src: http://wordpress.org/latest.tar.gz
-      dest: /home/admin
-      remote_src: yes
-      become: true
-  
-  - name: move the files to their final destination
-    command: cat /etc/motd
-    register: mymotd
+    - name: run second script for mariadb
+      shell: mysql -u root < /etc/wp_mariadb_config.sql
+
+    - name: restart mysql
+      service:
+        name: mariadb
+        state: restarted
+        enabled: yes
+
+    #Wordpress
+    - name: Get Wordpress
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /usr/share/nginx/html/wordpress.tar.gz
+        force: yes
+
+    - name: Unpack Wordpress
+      unarchive:
+        src: /usr/share/nginx/html/wordpress.tar.gz
+        dest:  /usr/share/nginx/html/
+        copy: no
+        creates: /usr/share/nginx/html/wordpress
+    
+    - name: copying wp-config
+      copy:
+        src: ./setup/wp-config.php
+        dest: /usr/share/nginx/html/wp-config.php
+        owner: admin
+        group: admin
+        mode: 0644
+
+    - name: install rsync
+      package:
+        name: rsync
+        state: present
+
+    - name: rsync script for mariadb
+      shell: rsync -avP /usr/share/nginx/html/wordpress/ /usr/share/nginx/html/
