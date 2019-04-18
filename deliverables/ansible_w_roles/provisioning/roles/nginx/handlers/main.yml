@@ -1,2 +1,30 @@
 ---
 # handlers file for nginx
+
+- name: Start firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Enable the firewall port 80
+  firewalld:
+    port: 80/tcp
+    state: enabled
+    immediate: yes
+
+- name: Enable the firewall port 443
+  firewalld:
+    port: 443/tcp
+    state: enabled
+    immediate: yes
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+
+
+...
